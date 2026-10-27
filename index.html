@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>배포 연습</title>
+<style>
+  body { font-family: sans-serif; max-width: 480px; margin: 24px auto; padding: 0 16px; }
+  input, button { font-size: 16px; padding: 8px; margin: 4px 0; width: 100%; box-sizing: border-box; }
+  #out { margin-top: 12px; font-weight: bold; }
+</style>
+</head>
+<body>
+<h1>계산기 (solution.py 사용)</h1>
+<p id="status">Python 불러오는 중...</p>
+<input id="a" type="number" placeholder="a">
+<input id="b" type="number" placeholder="b">
+<button onclick="run('add')" disabled>더하기</button>
+<button onclick="run('divide')" disabled>나누기</button>
+<div id="out"></div>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<script>
+let py, calc;
+(async () => {
+  py = await loadPyodide();
+  const code = await (await fetch("solution.py?" + Date.now())).text();
+  py.FS.writeFile("solution.py", code);
+  py.runPython("import solution");
+  calc = py.runPython("solution.Calculator()");
+  document.getElementById("status").textContent = "준비 완료";
+  document.querySelectorAll("button").forEach(b => b.disabled = false);
+})();
+
+function run(method) {
+  const a = Number(document.getElementById("a").value);
+  const b = Number(document.getElementById("b").value);
+  const out = document.getElementById("out");
+  try {
+    out.textContent = "결과: " + calc[method](a, b);
+  } catch (e) {
+    const msg = String(e.message).trim().split("\n").pop();
+    out.textContent = "오류: " + msg;
+  }
+}
+</script>
+</body>
+</html>
